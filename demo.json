@@ -2360,7 +2360,7 @@
             {
                 "id": 4100000155055,
                 "type": "btu-node",
-                "growthStageCode": "SD",
+                "growthStageCode": "SL",
                 "properties": {
                     "lineType": "fixed",
                     "name": "大田打浆整地",
