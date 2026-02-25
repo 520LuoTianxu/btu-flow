@@ -93,6 +93,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { generateSmartId, SmartIdTypeEnum } from "../api/index.js";
 import {
   Handle,
   MarkerType,
@@ -150,10 +151,25 @@ function exposeFitView() {
 defineExpose({ exposeFitView });
 
 function openDrawer(nodeId) {
-  const raw = rawNodeMap.value.get(nodeId);
+  let raw = rawNodeMap.value.get(nodeId);
   if (!raw) {
-    alert("未找到节点原始数据");
-    return;
+    raw = {
+      id: nodeId,
+      type: "btu-node",
+      growthStageCode: "-",
+      properties: {
+        lineType: "fixed",
+        name: nodeId,
+        operationTypeCode: "custom",
+        btuConfig: {
+          btuTemplateAdmittanceConditionAGO: null,
+          btuTemplateSubjectAGOList: [],
+          corrections: [],
+        },
+      },
+      timeWindowParameterPOList: [],
+    };
+    rawNodeMap.value.set(nodeId, raw);
   }
   drawerNodeData.value = raw;
   drawerVisible.value = true;
@@ -164,7 +180,7 @@ function onFlowDragOver(event) {
   event.dataTransfer.dropEffect = "move";
 }
 
-function onFlowDrop(event) {
+async function onFlowDrop(event) {
   event.preventDefault();
   const lineType = event.dataTransfer?.getData(DRAG_NODE_MIME);
   if (!lineType) return;
@@ -172,14 +188,17 @@ function onFlowDrop(event) {
     x: event.clientX,
     y: event.clientY,
   });
-  const id = `新节点${nodeSeq.value++}`;
+
+  const remoteId = await generateSmartId(SmartIdTypeEnum.BTU_TEMPLATE);
+  const internalLabelId = `新节点${nodeSeq.value++}`; // Display mostly
+
   const newRaw = {
-    id: Date.now(),
+    id: remoteId,
     type: "btu-node",
     growthStageCode: "-",
     properties: {
       lineType,
-      name: id,
+      name: internalLabelId, // Use internally user-visible base name
       operationTypeCode: "custom",
       btuConfig: {
         btuTemplateAdmittanceConditionAGO: null,
@@ -189,16 +208,18 @@ function onFlowDrop(event) {
     },
     timeWindowParameterPOList: [],
   };
-  rawNodeMap.value.set(id, newRaw);
+
+  // Actually we need the node ID in VueFlow to be the unique identifier, which previously was just "新节点1"
+  rawNodeMap.value.set(remoteId, newRaw);
   addNodes([
     {
-      id,
+      id: remoteId,
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
       position,
       style: nodeStyle(lineType),
       data: {
-        name: id,
+        name: internalLabelId,
         growthStageCode: "-",
         operationTypeCode: "custom",
         lineType,
@@ -209,11 +230,15 @@ function onFlowDrop(event) {
   ]);
 }
 
-function onConnect(connection) {
+async function onConnect(connection) {
+  const remoteEdgeId = await generateSmartId(
+    SmartIdTypeEnum.BTU_TEMPLATE_DEPENDENCY
+  );
+
   addEdges([
     {
       ...connection,
-      id: `e-${connection.source}-${connection.target}-${Date.now()}`,
+      id: remoteEdgeId,
       type: "smart",
       updatable: true,
       label: "0天",

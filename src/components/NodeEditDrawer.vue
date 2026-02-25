@@ -263,6 +263,13 @@
                   <span class="empty-icon">🔒</span>
                   <p>暂无准入条件配置</p>
                 </div>
+                <button
+                  v-if="!admittance"
+                  class="add-btn"
+                  @click="addAdmittance"
+                >
+                  <span>＋</span> 新增准入条件
+                </button>
               </section>
 
               <!-- 纠偏信息 -->
@@ -371,6 +378,7 @@
 
 <script setup>
 import { ref, watch } from "vue";
+import { generateSmartId, SmartIdTypeEnum } from "../api/index.js";
 
 const props = defineProps({
   visible: Boolean,
@@ -430,9 +438,10 @@ function twTypeLabel(t) {
   return { advanceReminder: "提前提醒", executionTimeout: "执行超时" }[t] || t;
 }
 
-function addTimeWindow() {
+async function addTimeWindow() {
+  const id = await generateSmartId(SmartIdTypeEnum.TIME_WINDOW_PARAMETER);
   timeWindows.value.push({
-    timeWindowParameterCode: Date.now(),
+    timeWindowParameterCode: id,
     attachHostType: "btu",
     seasonFactorCode: "cropSeason",
     seasonFactorValue: "中稻",
@@ -445,11 +454,12 @@ function addTimeWindow() {
   });
 }
 
-function addSubject() {
+async function addSubject() {
+  const id = await generateSmartId(SmartIdTypeEnum.BTU_TEMPLATE_SUBJECT);
   subjects.value.push({
     operationType: "CREATE",
     btuTemplateSubjectPO: {
-      btuTemplateSubjectCode: Date.now(),
+      btuTemplateSubjectCode: id,
       btuTemplateCode: local.value.id,
       termTitle: "新主题",
       version: 1,
@@ -458,12 +468,13 @@ function addSubject() {
   });
 }
 
-function addTerm(subj) {
+async function addTerm(subj) {
   if (!subj.btuTemplateTermAGOList) subj.btuTemplateTermAGOList = [];
+  const id = await generateSmartId(SmartIdTypeEnum.BTU_TEMPLATE_TERM);
   subj.btuTemplateTermAGOList.push({
     operationType: "CREATE",
     btuTemplateTermPO: {
-      btuTemplateTermCode: Date.now(),
+      btuTemplateTermCode: id,
       expressionType: "termSelect",
       conditionExpression: null,
       conditionExpressionDesc: null,
@@ -479,11 +490,12 @@ function addTerm(subj) {
   });
 }
 
-function addCorrection() {
+async function addCorrection() {
+  const id = await generateSmartId(SmartIdTypeEnum.BTU_TEMPLATE_CORRECTION);
   corrections.value.push({
     operationType: "CREATE",
     btuTemplateCorrectionPO: {
-      btuTemplateCorrectionCode: Date.now(),
+      btuTemplateCorrectionCode: id,
       expressionType: "correction",
       conditionExpression: "",
       conditionExpressionDesc: "",
@@ -497,6 +509,23 @@ function addCorrection() {
     btuTemplateImpactPOList: [],
     btuTemplateImpactAGOList: null,
   });
+}
+
+async function addAdmittance() {
+  const id = await generateSmartId(
+    SmartIdTypeEnum.BTU_TEMPLATE_ADMITTANCE_CONDITION
+  );
+  admittance.value = {
+    btuTemplateAdmittanceConditionCode: id,
+    btuTemplateCode: local.value.id,
+    expressionType: "admittance",
+    expression: "",
+    expressionDesc: "",
+    tagExpressionDesc: "",
+    scheduleIntervalValue: 1,
+    scheduleIntervalUnit: 14,
+    version: 1,
+  };
 }
 
 function onSave() {
