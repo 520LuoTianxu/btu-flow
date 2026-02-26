@@ -132,6 +132,7 @@
                       <select v-model="tw.timeWindowType">
                         <option value="advanceReminder">提前提醒</option>
                         <option value="executionTimeout">执行超时</option>
+                        <option value="delayedExecution">延后执行</option>
                       </select>
                     </div>
                     <div class="field">
@@ -435,7 +436,13 @@ watch(
 );
 
 function twTypeLabel(t) {
-  return { advanceReminder: "提前提醒", executionTimeout: "执行超时" }[t] || t;
+  return (
+    {
+      advanceReminder: "提前提醒",
+      executionTimeout: "执行超时",
+      delayedExecution: "延后执行",
+    }[t] || t
+  );
 }
 
 async function addTimeWindow() {

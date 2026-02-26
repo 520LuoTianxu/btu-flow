@@ -11,9 +11,13 @@ export const selectedEdgeId = ref("");
 
 export const rawNodeMap = ref(new Map());
 export const rawEdgeList = ref([]);
+export const rawEdgeMap = ref(new Map());
 
 export const drawerVisible = ref(false);
 export const drawerNodeData = ref(null);
+
+export const edgeDrawerVisible = ref(false);
+export const edgeDrawerData = ref(null);
 
 export const selectedNode = computed(() =>
     flowNodes.value.find((n) => n.id === selectedNodeId.value)

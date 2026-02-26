@@ -6,6 +6,7 @@ import {
     flowEdges,
     rawNodeMap,
     rawEdgeList,
+    rawEdgeMap,
 } from "./flowStore.js";
 import { safeParse, buildLayout, parseEdgeDays } from "../utils/layout.js";
 import { useVueFlow } from "@vue-flow/core";
@@ -20,6 +21,16 @@ export async function generateFromInput() {
         });
         rawNodeMap.value = newMap;
         rawEdgeList.value = JSON.parse(JSON.stringify(edgeList));
+
+        // Build rawEdgeMap keyed by edge ID for quick drawer lookups
+        const edgeMap = new Map();
+        edgeList.forEach((e, idx) => {
+            const fromName = e.fromBtuTemplateName;
+            const toName = e.toBtuTemplateName;
+            const edgeId = e.id || `e-${fromName}-${toName}-${idx}`;
+            edgeMap.set(String(edgeId), JSON.parse(JSON.stringify(e)));
+        });
+        rawEdgeMap.value = edgeMap;
 
         const { nodes, edges } = buildLayout(nodeList, edgeList);
         flowNodes.value = nodes;

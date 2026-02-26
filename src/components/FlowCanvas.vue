@@ -110,12 +110,15 @@ import {
   flowNodes,
   flowEdges,
   rawNodeMap,
+  rawEdgeMap,
   nodeSeq,
   selectedNodeId,
   selectedEdgeId,
   clearSelection,
   drawerVisible,
   drawerNodeData,
+  edgeDrawerVisible,
+  edgeDrawerData,
   DRAG_NODE_MIME,
 } from "../store/flowStore.js";
 import { nodeStyle } from "../utils/layout.js";
@@ -289,22 +292,35 @@ function onEdgeUpdate(event) {
 function onEdgeDoubleClick(event) {
   const edge = event?.edge;
   if (!edge) return;
-  const current = String(edge.data?.daysText || edge.label || "0天").replace(
-    "天",
-    ""
-  );
-  const input = window.prompt("请输入天数（整数）", current);
-  if (input == null) return;
-  const days = Number(input);
-  if (!Number.isFinite(days) || days < 0) {
-    alert("请输入大于等于 0 的数字");
-    return;
+  selectedNodeId.value = "";
+  selectedEdgeId.value = edge.id;
+
+  // Try to find raw edge data from rawEdgeMap
+  let raw = rawEdgeMap.value.get(String(edge.id));
+  if (!raw) {
+    // Build one from the flow edge data
+    raw = {
+      id: edge.id,
+      fromBtuTemplateName: edge.source,
+      toBtuTemplateName: edge.target,
+      properties: {
+        lineType: edge.data?.lineType || "fixed",
+        timeWindowParameterPOList: [],
+      },
+    };
+    rawEdgeMap.value.set(String(edge.id), raw);
   }
-  const daysText = `${Math.round(days)}天`;
-  flowEdges.value = flowEdges.value.map((e) => {
-    if (e.id !== edge.id) return e;
-    return { ...e, label: daysText, data: { ...(e.data || {}), daysText } };
-  });
+
+  edgeDrawerData.value = {
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    lineType: raw.properties?.lineType || edge.data?.lineType || "fixed",
+    daysText: String(edge.data?.daysText || edge.label || "0天"),
+    properties: raw.properties || {},
+    timeWindowParameterPOList: raw.properties?.timeWindowParameterPOList || [],
+  };
+  edgeDrawerVisible.value = true;
 }
 </script>
 

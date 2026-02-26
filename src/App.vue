@@ -14,6 +14,13 @@
       @close="drawerVisible = false"
       @save="onDrawerSave"
     />
+
+    <EdgeEditDrawer
+      :visible="edgeDrawerVisible"
+      :edgeData="edgeDrawerData"
+      @close="edgeDrawerVisible = false"
+      @save="onEdgeDrawerSave"
+    />
   </div>
 </template>
 
@@ -24,16 +31,20 @@ import IOPanel from "./components/IOPanel.vue";
 import Palette from "./components/Palette.vue";
 import FlowCanvas from "./components/FlowCanvas.vue";
 import NodeEditDrawer from "./components/NodeEditDrawer.vue";
+import EdgeEditDrawer from "./components/EdgeEditDrawer.vue";
 
 import {
   drawerVisible,
   drawerNodeData,
+  edgeDrawerVisible,
+  edgeDrawerData,
   rawNodeMap,
+  rawEdgeMap,
   flowNodes,
   flowEdges,
   selectedNodeId,
 } from "./store/flowStore.js";
-import { nodeStyle } from "./utils/layout.js";
+import { nodeStyle, edgeStyle } from "./utils/layout.js";
 
 const flowCanvasRef = ref(null);
 
@@ -84,6 +95,45 @@ function onDrawerSave(updatedData) {
     selectedNodeId.value = newName;
   }
   drawerVisible.value = false;
+}
+
+function onEdgeDrawerSave(updatedEdge) {
+  const daysText = updatedEdge.daysText;
+  const lineType = updatedEdge.lineType || "fixed";
+
+  // Update flowEdges with new label / style
+  flowEdges.value = flowEdges.value.map((e) => {
+    if (e.id !== updatedEdge.id) return e;
+    return {
+      ...e,
+      label: daysText,
+      style: { ...edgeStyle(lineType) },
+      data: {
+        ...(e.data || {}),
+        daysText,
+        lineType,
+      },
+    };
+  });
+
+  // Update rawEdgeMap
+  let raw = rawEdgeMap.value.get(String(updatedEdge.id));
+  if (!raw) {
+    raw = {
+      id: updatedEdge.id,
+      fromBtuTemplateName: updatedEdge.source,
+      toBtuTemplateName: updatedEdge.target,
+      properties: {},
+    };
+  }
+  raw.properties = raw.properties || {};
+  raw.properties.lineType = lineType;
+  raw.properties.timeWindowParameterPOList = JSON.parse(
+    JSON.stringify(updatedEdge.timeWindowParameterPOList || [])
+  );
+  rawEdgeMap.value.set(String(updatedEdge.id), raw);
+
+  edgeDrawerVisible.value = false;
 }
 </script>
 
