@@ -77,5 +77,34 @@ src/
    (打包后的文件全在默认的 `dist/` 文件夹下。)
 
 ## 💡 使用小贴士
+### 代理 / 反向代理访问配置
+
+如果项目已经启动，但你是通过代理域名、Nginx、内网穿透地址或局域网 IP 来访问，本项目现在支持通过环境变量直接配置。
+
+1. 复制示例配置
+   ```sh
+   copy .env.example .env.local
+   ```
+2. 按你的访问方式修改 `.env.local`
+   ```env
+   VITE_DEV_HOST=0.0.0.0
+   VITE_DEV_PORT=5173
+   VITE_PUBLIC_BASE=/
+   VITE_ALLOWED_HOSTS=localhost,127.0.0.1,你的代理域名
+   VITE_SMART_ID_TARGET=http://precis-agric.tsg.cfpamf.com
+   ```
+3. 如果页面能打开但热更新失败，再补 HMR
+   ```env
+   VITE_HMR_PROTOCOL=ws
+   VITE_HMR_HOST=你的代理域名
+   VITE_HMR_PORT=5173
+   ```
+
+常见场景说明：
+- 只能本机打开，别的机器或代理打不开：确认 `VITE_DEV_HOST=0.0.0.0`
+- 浏览器提示 host 不允许：把代理域名加到 `VITE_ALLOWED_HOSTS`
+- 页面能进但保存代码不热更新：补 `VITE_HMR_HOST` / `VITE_HMR_PORT`
+- 后端 Smart ID 接口不通：确认 `VITE_SMART_ID_TARGET` 指向可达服务
+
 1. **获取不到 ID/发红报错怎么办？**：本项目依赖服务端的生成器 API（通常是指向类似 `http://precisXXXX.XX.com/smartId/` ），因此在非前端调试本地机器的情况下，需要确保你运行所在的主机网络支持连接到该后台，或是正确配置好了你所在的线上 Nginx 反向代理拦截对应 `smartId` 请求路由。
 2. **为什么线穿过盒子的问题被解决了？**：本应用内部设计并在 `src/utils/layout.js` 提供了一个独立的“**几何平铺边缘重叠消除算法**”。为了生效其对齐，你需要导入你的数据后点击首部的 **【一键排版】** 才能让应用根据节点位置和层级，把一簇平行关系线梳理错开从而不再相互覆盖。

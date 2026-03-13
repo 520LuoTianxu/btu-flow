@@ -187,11 +187,10 @@
                       </button>
                     </div>
                     <div class="field">
-                      <label>条目内容</label>
-                      <textarea
+                      <label>条目内容 (支持 "/" 指令)</label>
+                      <BtuExpressionEditor
                         v-model="term.btuTemplateTermPO.termContent"
-                        rows="3"
-                      ></textarea>
+                      />
                     </div>
                     <div class="field-grid cols-2">
                       <div class="field">
@@ -205,8 +204,8 @@
                         class="field"
                         v-if="term.btuTemplateTermPO.conditionType !== 'none'"
                       >
-                        <label>条件表达式</label>
-                        <input
+                        <label>条件表达式 (支持 "/" 指令)</label>
+                        <BtuExpressionEditor
                           v-model="term.btuTemplateTermPO.conditionExpression"
                         />
                       </div>
@@ -235,8 +234,8 @@
                 <template v-if="admittance">
                   <div class="config-card">
                     <div class="field">
-                      <label>表达式</label>
-                      <input v-model="admittance.expression" />
+                      <label>表达式 (支持 "/" 指令)</label>
+                      <BtuExpressionEditor v-model="admittance.expression" />
                     </div>
                     <div class="field">
                       <label>表达式描述</label>
@@ -295,11 +294,10 @@
                     </button>
                   </div>
                   <div class="field">
-                    <label>条件表达式</label>
-                    <textarea
+                    <label>条件表达式 (支持 "/" 指令)</label>
+                    <BtuExpressionEditor
                       v-model="corr.btuTemplateCorrectionPO.conditionExpression"
-                      rows="2"
-                    ></textarea>
+                    />
                   </div>
                   <div class="field">
                     <label>条件描述</label>
@@ -380,6 +378,7 @@
 <script setup>
 import { ref, watch } from "vue";
 import { generateSmartId, SmartIdTypeEnum } from "../api/index.js";
+import BtuExpressionEditor from "./BtuExpressionEditor.vue";
 
 const props = defineProps({
   visible: Boolean,
