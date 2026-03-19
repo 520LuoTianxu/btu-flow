@@ -103,16 +103,110 @@ function buildImportedPositionsMap(flowLayout, resolveNodeName) {
     return map.size > 0 ? map : null;
 }
 
-export function safeParse(inputText) {
-    const parsed = JSON.parse(inputText);
-    const payload = parsed?.flowConfig
-        ? parsed
-        : parsed?.data?.flowConfig
-          ? {
-                flowConfig: parsed.data.flowConfig,
-                flowLayout: parsed.data.flowLayout ?? parsed.flowLayout,
+function extractFirstCompleteJson(text) {
+    const source = String(text || "");
+    const start = source.search(/[{\[]/);
+    if (start < 0) return null;
+
+    let inString = false;
+    let escaping = false;
+    const stack = [];
+
+    for (let i = start; i < source.length; i += 1) {
+        const ch = source[i];
+
+        if (inString) {
+            if (escaping) {
+                escaping = false;
+            } else if (ch === "\\") {
+                escaping = true;
+            } else if (ch === "\"") {
+                inString = false;
             }
-          : parsed;
+            continue;
+        }
+
+        if (ch === "\"") {
+            inString = true;
+            continue;
+        }
+
+        if (ch === "{" || ch === "[") {
+            stack.push(ch);
+            continue;
+        }
+
+        if (ch === "}" || ch === "]") {
+            const last = stack[stack.length - 1];
+            const matches =
+                (last === "{" && ch === "}") || (last === "[" && ch === "]");
+            if (!matches) return null;
+
+            stack.pop();
+            if (stack.length === 0) {
+                return source.slice(start, i + 1);
+            }
+        }
+    }
+
+    return null;
+}
+
+function parsePossiblyBrokenJson(inputText) {
+    const normalizedText = String(inputText || "").replace(/^\uFEFF/, "").trim();
+
+    try {
+        return JSON.parse(normalizedText);
+    } catch (error) {
+        const recovered = extractFirstCompleteJson(normalizedText);
+        if (!recovered) throw error;
+        return JSON.parse(recovered);
+    }
+}
+
+function unwrapFlowPayload(parsed) {
+    if (!parsed || typeof parsed !== "object") return parsed;
+
+    if (parsed.flowConfig) {
+        return {
+            flowConfig: parsed.flowConfig,
+            flowLayout: parsed.flowLayout,
+        };
+    }
+
+    if (parsed.data?.flowConfig) {
+        return {
+            flowConfig: parsed.data.flowConfig,
+            flowLayout: parsed.data.flowLayout ?? parsed.flowLayout,
+        };
+    }
+
+    const rawFlowConfigJson = parsed.flowConfigJson;
+    if (rawFlowConfigJson) {
+        const flowConfigJson =
+            typeof rawFlowConfigJson === "string"
+                ? parsePossiblyBrokenJson(rawFlowConfigJson)
+                : rawFlowConfigJson;
+
+        if (flowConfigJson?.flowConfig) {
+            return {
+                flowConfig: flowConfigJson.flowConfig,
+                flowLayout: flowConfigJson.flowLayout ?? parsed.flowLayout,
+            };
+        }
+
+        return {
+            flowConfig: flowConfigJson,
+            flowLayout: parsed.flowLayout,
+        };
+    }
+
+    return parsed;
+}
+
+export function safeParse(inputText) {
+    const parsed = parsePossiblyBrokenJson(inputText);
+    const payload = unwrapFlowPayload(parsed);
     const flowConfig = payload?.flowConfig ?? payload;
     const rawNodeList = Array.isArray(flowConfig?.nodes) ? flowConfig.nodes : [];
     const rawEdgeList = Array.isArray(flowConfig?.edges) ? flowConfig.edges : [];
