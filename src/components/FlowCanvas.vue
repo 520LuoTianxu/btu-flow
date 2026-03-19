@@ -47,6 +47,18 @@
           class="btu-handle"
         />
         <div class="node-title">{{ data.name }}</div>
+        <div
+          v-if="data.statusText"
+          :class="[
+            'node-status',
+            {
+              disconnected: data.isDisconnectedFromSeed,
+              isolated: data.isIsolated && !data.isDisconnectedFromSeed,
+            },
+          ]"
+        >
+          {{ data.statusText }}
+        </div>
         <div class="node-meta">
           {{ data.growthStageCode || "-" }} ·
           {{ data.operationTypeCode || "-" }}
@@ -348,6 +360,23 @@ function onEdgeDoubleClick(event) {
   margin-top: 8px;
   font-size: 12px;
   color: #4e647f;
+}
+:deep(.vue-flow__node .node-status) {
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+:deep(.vue-flow__node .node-status.disconnected) {
+  background: #ffedd5;
+  color: #c2410c;
+}
+:deep(.vue-flow__node .node-status.isolated) {
+  background: #e2e8f0;
+  color: #475569;
 }
 :deep(.vue-flow__handle.btu-handle) {
   width: 12px;

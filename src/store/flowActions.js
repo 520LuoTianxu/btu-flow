@@ -8,12 +8,11 @@ import {
     rawEdgeList,
     rawEdgeMap,
 } from "./flowStore.js";
-import { safeParse, buildLayout, parseEdgeDays } from "../utils/layout.js";
-import { useVueFlow } from "@vue-flow/core";
+import { safeParse, buildLayout } from "../utils/layout.js";
 
 export async function generateFromInput() {
     try {
-        const { nodeList, edgeList } = safeParse(jsonInput.value);
+        const { nodeList, edgeList, flowLayout } = safeParse(jsonInput.value);
         const newMap = new Map();
         nodeList.forEach((n, idx) => {
             const name = n?.properties?.name || `node_${idx}`;
@@ -32,7 +31,7 @@ export async function generateFromInput() {
         });
         rawEdgeMap.value = edgeMap;
 
-        const { nodes, edges } = buildLayout(nodeList, edgeList);
+        const { nodes, edges } = buildLayout(nodeList, edgeList, flowLayout);
         flowNodes.value = nodes;
         flowEdges.value = edges;
         exportText.value = "";

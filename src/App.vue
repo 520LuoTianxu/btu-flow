@@ -75,7 +75,10 @@ function onDrawerSave(updatedData) {
     return {
       ...n,
       id: newName,
-      style: nodeStyle(lineType),
+      style: nodeStyle(lineType, {
+        disconnected: n.data?.isDisconnectedFromSeed,
+        isolated: n.data?.isIsolated,
+      }),
       data: {
         ...n.data,
         name: newName,

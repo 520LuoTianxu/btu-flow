@@ -132,7 +132,10 @@ function updateSelectedNode(patch) {
         return {
           ...n,
           id: nextId,
-          style: nodeStyle(nextLineType),
+          style: nodeStyle(nextLineType, {
+            disconnected: n.data?.isDisconnectedFromSeed,
+            isolated: n.data?.isIsolated,
+          }),
           data: { ...(n.data || {}), ...patch, name: nextId },
         };
       });
@@ -160,7 +163,10 @@ function updateSelectedNode(patch) {
     const lineType = patch.lineType || n.data?.lineType || "fixed";
     return {
       ...n,
-      style: nodeStyle(lineType),
+      style: nodeStyle(lineType, {
+        disconnected: n.data?.isDisconnectedFromSeed,
+        isolated: n.data?.isIsolated,
+      }),
       data: { ...(n.data || {}), ...patch },
     };
   });
